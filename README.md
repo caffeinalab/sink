@@ -1,8 +1,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/caffeinalab/postino">
-    <img src="res/postman.png" alt="Logo" width="130" height="130">
+  <a href="https://github.com/caffeinalab/sink">
+    <img src="res/sink.png" alt="Logo" width="130" height="130">
   </a>
   <h1 align="center">Sink</h1>
 
@@ -52,7 +52,7 @@ The project depends on the [aws-sdk-php](https://github.com/aws/aws-sdk-php). It
 <!-- GETTING STARTED -->
 ## Getting Started
 
-You can just clone this repository inside your `wp-content/plugins` folder, or [download the installable zip](https://github.com/caffeinalab/postino/releases/latest/download/sink.zip) and install it via the WordPress dashboard.
+You can just clone this repository inside your `wp-content/plugins` folder, or [download the installable zip](https://github.com/caffeinalab/sink/releases/latest/download/sink.zip) and install it via the WordPress dashboard.
 
 ### Updates
 
