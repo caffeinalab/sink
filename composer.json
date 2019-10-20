@@ -1,0 +1,15 @@
+{
+    "name": "root/sink",
+    "description": "A wordpress plugin to sync media with s3",
+    "type": "library",
+    "require": {
+        "aws/aws-sdk-php": "^3.112"
+    },
+    "license": "MIT.",
+    "authors": [
+        {
+            "name": "Ani Sinanaj",
+            "email": "sinanajani@outllook.com"
+        }
+    ]
+}
