@@ -7,7 +7,6 @@
 ?>
 
 <table class="form-table">
-</tr>
 <tr valign="top">
 <th scope="row">AWS Region</th>
 <td>
@@ -36,57 +35,26 @@
 </td>
 </tr>
 
-</tr>
-<tr valign="top">
-<th scope="row">AWS Endpoint</th>
-<td><input type="text" name="aws_endpoint" value="<?= get_option('aws_endpoint'); ?>" placeholder="s3.amazonaws.com" /></td>
-</tr>
+<?php array_shift($configMap); ?>
 
-</tr>
-<tr valign="top">
-<th scope="row">AWS Bucket</th>
-<td><input type="text" name="aws_bucket" value="<?= get_option('aws_bucket'); ?>" /></td>
-</tr>
-
-</tr>
-<tr valign="top">
-<th scope="row">AWS Access Key ID</th>
-<td><input type="text" name="aws_access_id" value="<?= get_option('aws_access_id'); ?>" /></td>
-</tr>
-
-</tr>
-<tr valign="top">
-<th scope="row">AWS secret</th>
-<td><input type="password" name="aws_secret" value="<?= get_option('aws_secret'); ?>" /></td>
-</tr>
-
-</tr>
-<tr valign="top">
-<th scope="row">Delete Original</th>
-<td><input type="checkbox" name="delete_original" <?= get_option('delete_original') ? "checked" : ""; ?> /></td>
-</tr>
-
-<tr valign="top">
-<th scope="row">Resize for Wordpress</th>
-<td><input type="checkbox" name="resize_wordpress" <?= get_option('resize_wordpress') ? "checked" : ""; ?> /></td>
-</tr>
-
-<tr valign="top">
-<th scope="row">CDN Endpoint</th>
-<td><input type="text" name="cdn_endpoint" value="<?= get_option('cdn_endpoint'); ?>" placeholder="imgix.net" /></td>
-</tr>
-
-<tr valign="top">
-<th scope="row">HTTP Proxy</th>
-<td>
-  <input type="text" name="http_proxy_url" value="<?= get_option('http_proxy_url'); ?>" placeholder="URL" /> :
-  <input type="text" name="http_proxy_port" value="<?= get_option('http_proxy_port'); ?>" placeholder="port" />
-</td>
-</tr>
+<?php foreach($configMap as $config => $data): ?>
+  <tr valign="top">
+    <th scope="row"><?= $data['title']; ?></th>
+    <td>
+      <input
+        <?= $data['password'] == true ? 'type="password"' : '' ?>
+        type="<?= $data['type'] == 'string' ? 'text' : ($data['type'] == 'boolean' ? 'checkbox' : $data['type']); ?>"
+        name="<?= $config; ?>"
+        value="<?= get_option($config); ?>"
+        <?= $type == 'boolean' && get_option($config) ? 'checked' : ''; ?>
+        placeholder="<?= $data['placeholder']; ?>" />
+    </td>
+  </tr>
+<?php endforeach; ?>
 
 </table>
 <?php
-submit_button();
+  submit_button();
 ?>
 </form>
 </div>
