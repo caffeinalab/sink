@@ -8,15 +8,15 @@ class Updater
     protected $github;
 
 
-    public function __construct()
+    public function __construct($slug, $name, $github_user, $repository)
     {
         $this->config = [
-            'slug' => 'sink/sink.php',
-            'proper_folder_name' => 'sink'
+            'slug' => $slug,
+            'proper_folder_name' => $name
         ];
         $this->github = [
-            'user' => 'caffeinalab',
-            'repository' => 'sink'
+            'user' => $github_user,
+            'repository' => $repository
         ];
     }
 
