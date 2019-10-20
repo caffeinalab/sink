@@ -2,6 +2,8 @@
 
 namespace Sink;
 
+use \Sink\Sink;
+
 class UI
 {
 
@@ -18,6 +20,7 @@ class UI
 
   public function renderOptionsPage()
   {
+    $configMap = (new Sink())->configMap;
     require $this->optionsTemplate;
   }
 
