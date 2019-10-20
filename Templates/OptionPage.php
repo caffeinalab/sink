@@ -42,13 +42,13 @@
     <th scope="row"><label for="<?= $config; ?>"><?= $data['title']; ?></label></th>
     <td>
       <input
-        <?= $data['password'] == true ? 'type="password"' : '' ?>
+        <?= @$data['password'] == true ? 'type="password"' : '' ?>
         type="<?= $data['type'] == 'string' ? 'text' : ($data['type'] == 'boolean' ? 'checkbox' : $data['type']); ?>"
         name="<?= $config; ?>"
         id="<?= $config; ?>"
         value="<?= get_option($config); ?>"
-        <?= $type == 'boolean' && get_option($config) ? 'checked' : ''; ?>
-        placeholder="<?= $data['placeholder']; ?>" />
+        <?= $data['type'] == 'boolean' && get_option($config) ? 'checked' : ''; ?>
+        placeholder="<?= @$data['placeholder']; ?>" />
     </td>
   </tr>
 <?php endforeach; ?>
