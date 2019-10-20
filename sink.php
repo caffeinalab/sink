@@ -28,20 +28,18 @@ define( 'SINK_VERSION', '0.0.1' );
 
 class Sink
 {
-
   public $configMap = [
-    'aws_region' => 'string',
-    'aws_endpoint' => 'string',
-    'aws_bucket' => 'string',
-    'aws_access_id' => 'string',
-    'aws_secret' => 'string',
-    'aws_uploads_path' => 'string',
-    'delete_original' => 'boolean',
-    'retain_on_delete' => 'boolean',
-    'resize_wordpress' => 'boolean',
-    'cdn_endpoint' => 'string',
-    'http_proxy_url' => 'string',
-    'http_proxy_port' => 'number',
+    'aws_region' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Region'],
+    'aws_bucket' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Bucket'],
+    'aws_access_id' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Access Key ID'],
+    'aws_secret' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Secret', 'password' => true],
+    'aws_uploads_path' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS uploads path'],
+    'delete_original' => ['type' => 'boolean', 'placeholder' => '', 'title' => 'Delete original file after upload'],
+    'retain_on_delete' => ['type' => 'boolean', 'placeholder' => '', 'title' => 'Keep after delete'],
+    'resize_wordpress' => ['type' => 'boolean', 'placeholder' => '', 'title' => 'Upload WP resized files'],
+    'cdn_endpoint' => ['type' => 'string', 'placeholder' => '', 'title' => 'Imgix or Cloudfront URL'],
+    'http_proxy_url' => ['type' => 'string', 'placeholder' => '', 'title' => 'HTTP Proxy URL'],
+    'http_proxy_port' => ['type' => 'number', 'placeholder' => '', 'title' => 'HTTP Proxy port'],
   ];
 
   public $plugin_name = "sink";
@@ -75,7 +73,7 @@ class Sink
     foreach($this->configMap as $config => $type) {
       register_setting(
         $this->plugin_name.'_options',
-        $config, ['type' => $type]
+        $config, ['type' => $type['type']]
       );
     }
   }
