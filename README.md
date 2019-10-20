@@ -37,9 +37,9 @@ Sync media with an AWS S3 bucket
 <!-- ![Product Name Screen Shot][screenshot]-->
 
 We built **Sink** because in our web development architecture, we containerized and split all the services. This also meant that we decoupled software from data.
-In the case of media files, we use usually AWS S3 and
+In the case of media files, we use usually AWS S3 and Imgix.
 
-**Sink** was built to make sending emails via WP the easiest it can get. It provides a setting page where you can set the SMTP parameters, but, in case of batch installations, you can even put a configuration file in your theme.
+This plugin makes it seamless to use S3 as a storage service throught the S3's stream implementation.
 
 ### How it works
 
@@ -67,17 +67,22 @@ To use Sink, just install it and configure it in the settings page based on your
 You can also alternatively add these settings into `wp-config.php`
 
 ```php
-define('SINK_AWS_REGION', "eu-west-2");
-define('SINK_AWS_ENDPOINT', "some value");
-define('SINK_AWS_BUCKET', "some value");
-define('SINK_AWS_ACCESS_ID', "some value");
-define('SINK_AWS_SECRET', "some value");
-define('SINK_DELETE_ORIGINAL', "1");
-define('SINK_RESIZE_WORDPRESS', "1");
-define('SINK_CDN_ENDPOINT', "some value");
-define('SINK_HTTP_PROXY_URL', "some value");
+define('SINK_AWS_REGION', "eu-west-1");
+define('SINK_AWS_BUCKET', "caffeina"); // bucket name
+define('SINK_AWS_ACCESS_ID', "");
+define('SINK_AWS_SECRET', "");
+define('SINK_AWS_UPLOADS_PATH', "uploads");
+
+define('SINK_CDN_ENDPOINT', 'https://caffeina.imgix.net/uploads'); // mind that there's no slash
+define('SINK_KEEP_SITE_DOMAIN', false);
+
+define('SINK_HTTP_PROXY_URL', "http://localhost"); // the protocol is included
 define('SINK_HTTP_PROXY_PORT', "8080");
 ```
+
+When `SINK_KEEP_SITE_DOMAIN` is set to true, the media address will keep the WordPress URL. That means that it won't work until you add some Nginx rules to proxy the requests to the CDN endpoint.
+
+`SINK_CDN_ENDPOINT` has priority over `SINK_KEEP_SITE_DOMAIN` so if set, all images will have the CDN URL.
 
 Everything is now set up. You don't need to worry about anything else.
 
@@ -89,9 +94,9 @@ On one side, we are already saving the files to a distributed storage like *S3*,
 
 There are two types of image resizing though, the one that WordPress does automatically, and the one that is dynamic for the frontend website.
 
-If the resize option is enabled in the plugin, the WordPress generated thumbnails (resized images) will be moved to S3.
+The WordPress generated thumbnails (resized images) will be moved to S3 automatically.
 
-> This approach isn't recommended because it creates unnecessary copies of the same file and it adds load to the server. Use a service to resize photos on the fly instead. And then simply proxy the images from Nginx like below.
+> This approach isn't recommended because it creates unnecessary copies of the same file and it adds load to the server. Use a service to resize photos on the fly instead and turn off image resizing on WordPress. And then simply proxy the images from Nginx like below.
 
 ```lua
 server {
