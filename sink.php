@@ -26,8 +26,15 @@ define( 'SINK_URL', plugin_dir_url( __FILE__ ) );
 define( 'SINK_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SINK_VERSION', '1.0.0' );
 
+/**
+ * Main class of the plugin. Everything starts here
+ */
 class Sink
 {
+  /**
+   * Defines plugin options and some properties for each in order to create
+   * dynamically the options page
+   */
   public $configMap = [
     'aws_region' => ['type' => 'string', 'placeholder' => 'eu-west-1', 'title' => 'AWS Region'],
     'aws_bucket' => ['type' => 'string', 'placeholder' => 'caffeina', 'title' => 'AWS Bucket'],
@@ -43,9 +50,21 @@ class Sink
   public $plugin_name = "sink";
   public $plugin_slug = 'sink/sink.php';
   public $github_user = 'caffeinalab';
+
+  /**
+   * Reference to the plugin's UI class
+   */
   protected $ui;
+
+  /**
+   * Default property. Required by S3.
+   */
   protected $default_uploads_folder = 'uploads';
 
+  /**
+   * Construct
+   * @return Sink instance of Sink
+   */
   public function __construct()
   {
     // Boot of Sink
@@ -68,6 +87,11 @@ class Sink
     $this->fixUploadDir();
   }
 
+  /**
+   * Loops through config options to save them on the database
+   * @uses `register_setting` wp global function
+   * @return void
+   */
   public function registerSettings()
   {
     foreach($this->configMap as $config => $type) {
@@ -78,6 +102,14 @@ class Sink
     }
   }
 
+  /**
+   * Checks whether the config options are set through wp-config.php
+   * Loops through them all
+   * @uses `get_option`
+   * @uses `update_option`
+   * @uses UI
+   * @return void
+   */
   public function checkWPConfig()
   {
       $loaded = false;
@@ -97,6 +129,12 @@ class Sink
       }
   }
 
+  /**
+   * Builds an S3 client
+   * @uses Aws\S3\S3Client
+   * @uses `get_option`
+   * @return S3Client object that represents a connection to AWS S3
+   */
   private function getS3Client()
   {
     $config = [
@@ -117,6 +155,12 @@ class Sink
     return new S3Client($config);
   }
 
+  /**
+   * Enables using `s3://` protocol to be able to use S3 paths
+   * as filesystem dirs.
+   * @uses self::getS3Client
+   * @return Aws\S3\S3Client object that represents a connection to AWS S3
+   */
   public function registerS3StreamWrapper()
   {
     // Instantiate an Amazon S3 client.
@@ -126,21 +170,30 @@ class Sink
     return $client;
   }
 
+  /**
+   * Handles the creation of a default directory in the Bucket
+   * @uses `get_option`
+   * @uses Aws\S3\S3Client
+   * @uses UI
+   * @return String domain name to the Bucket or CDN
+   */
   public function createDefaultDir($dir, $key)
   {
     // Instantiate an Amazon S3 client.
     $client = $this->registerS3StreamWrapper();
-    if (null != get_option('cdn_endpoint')) {
-      return get_option('cdn_endpoint');
-    }
-
-    if (true == get_option('keep_site_domain')) {
-      return WP_SITEURL;
-    }
 
     try {
       if (!file_exists($dir.$key)) {
         mkdir($dir.$key);
+      }
+
+      // Moved because it should always create the directory first.
+      if (null != get_option('cdn_endpoint')) {
+          return get_option('cdn_endpoint');
+      }
+
+      if (true == get_option('keep_site_domain')) {
+          return WP_SITEURL;
       }
 
       $result = $client->getObjectUrl(get_option('aws_bucket'), $key);
@@ -152,6 +205,13 @@ class Sink
     return $result;
   }
 
+  /**
+   * Configures WP upload_dir to use our own settings instead of those calculated at runtime
+   * @uses Aws\S3\S3Client
+   * @uses `get_option`
+   * @uses self::createDefaultDir
+   * @return Array $uploads, contains an associative array as WP expects it
+   */
   public function setUploadDir($uploads)
   {
     // Instantiate an Amazon S3 client.
@@ -175,29 +235,38 @@ class Sink
     return $uploads;
   }
 
-  function deleteMedia($id)
-  {
-    $this->registerS3StreamWrapper();
-
-    $meta = get_post_meta($id);
-    $metadata = maybe_unserialize($meta['_wp_attachment_metadata'][0]);
-    $basename = basename($metadata['file']);
-    $path = str_replace($basename, '', $metadata['file']);
-
-    try {
-      unlink($metadata['file']);
-    } catch(\Exception $e) {
-      $this->ui->renderNotice('notice-error', $e->getMessage);
-    }
-
-    foreach($metadata['sizes'] as $thumbnail) {
-      unlink($path.$thumbnail['file']);
-    }
-  }
-
+  /**
+   * Adds a filter to update upload_dir
+   * @uses `add_filter`
+   * @uses self::setUploadDir
+   * @return void
+   */
   public function fixUploadDir()
   {
     add_filter('upload_dir', [$this, 'setUploadDir']);
+  }
+
+
+  // Unused methods
+
+  function deleteMedia($id)
+  {
+      $this->registerS3StreamWrapper();
+
+      $meta = get_post_meta($id);
+      $metadata = maybe_unserialize($meta['_wp_attachment_metadata'][0]);
+      $basename = basename($metadata['file']);
+      $path = str_replace($basename, '', $metadata['file']);
+
+      try {
+          unlink($metadata['file']);
+      } catch (\Exception $e) {
+          $this->ui->renderNotice('notice-error', $e->getMessage);
+      }
+
+      foreach ($metadata['sizes'] as $thumbnail) {
+          unlink($path.$thumbnail['file']);
+      }
   }
 
   public function handleDelete()
