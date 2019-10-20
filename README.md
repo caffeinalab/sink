@@ -27,6 +27,7 @@ Sync media with an AWS S3 bucket
     - [Updates](#updates)
   - [Usage](#usage)
     - [Resizing](#resizing)
+  - [S3 Bucket configuration](#s3-bucket-configuration)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -121,6 +122,31 @@ server {
   # WordPress configuration
 }
 
+```
+
+## S3 Bucket configuration
+
+To be for this to work, you'd need two things on AWS.
+
+1. An IAM role with full access to the S3 bucket dedicated to the website
+2. Setting the Bucket to be publicly accessible (readable)
+
+Here's an example on giving the bucket public access permissions. In the example below, `caffeina` is the bucket name.
+
+```json
+{
+    "Version": "2008-10-17",
+    "Id": "http referer policy example",
+    "Statement": [
+        {
+            "Sid": "readonly policy",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::caffeina/*"
+        }
+    ]
+}
 ```
 
 <!-- CONTRIBUTING -->
