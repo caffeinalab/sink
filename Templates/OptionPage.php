@@ -8,7 +8,7 @@
 
 <table class="form-table">
 <tr valign="top">
-<th scope="row">AWS Region</th>
+<th scope="row"><label for="aws_region">AWS Region</label></th>
 <td>
   <select type="text" name="aws_region" value="<?= get_option('aws_region'); ?>">
     <option <?= get_option('aws_region') == 'eu-west-1' ? "selected" : "" ?> value="eu-west-1">eu-west-1</option>
@@ -39,12 +39,13 @@
 
 <?php foreach($configMap as $config => $data): ?>
   <tr valign="top">
-    <th scope="row"><?= $data['title']; ?></th>
+    <th scope="row"><label for="<?= $config; ?>"><?= $data['title']; ?></label></th>
     <td>
       <input
         <?= $data['password'] == true ? 'type="password"' : '' ?>
         type="<?= $data['type'] == 'string' ? 'text' : ($data['type'] == 'boolean' ? 'checkbox' : $data['type']); ?>"
         name="<?= $config; ?>"
+        id="<?= $config; ?>"
         value="<?= get_option($config); ?>"
         <?= $type == 'boolean' && get_option($config) ? 'checked' : ''; ?>
         placeholder="<?= $data['placeholder']; ?>" />
