@@ -29,17 +29,15 @@ define( 'SINK_VERSION', '0.0.1' );
 class Sink
 {
   public $configMap = [
-    'aws_region' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Region'],
-    'aws_bucket' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Bucket'],
+    'aws_region' => ['type' => 'string', 'placeholder' => 'eu-west-1', 'title' => 'AWS Region'],
+    'aws_bucket' => ['type' => 'string', 'placeholder' => 'caffeina', 'title' => 'AWS Bucket'],
     'aws_access_id' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Access Key ID'],
     'aws_secret' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Secret', 'password' => true],
     'aws_uploads_path' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS uploads path'],
-    'delete_original' => ['type' => 'boolean', 'placeholder' => '', 'title' => 'Delete original file after upload'],
-    'retain_on_delete' => ['type' => 'boolean', 'placeholder' => '', 'title' => 'Keep after delete'],
-    'resize_wordpress' => ['type' => 'boolean', 'placeholder' => '', 'title' => 'Upload WP resized files'],
-    'cdn_endpoint' => ['type' => 'string', 'placeholder' => '', 'title' => 'Imgix or Cloudfront URL'],
-    'http_proxy_url' => ['type' => 'string', 'placeholder' => '', 'title' => 'HTTP Proxy URL'],
-    'http_proxy_port' => ['type' => 'number', 'placeholder' => '', 'title' => 'HTTP Proxy port'],
+    'keep_site_domain' => ['type' => 'boolean', 'placeholder' => '', 'title' => 'Do not override website domain.'],
+    'cdn_endpoint' => ['type' => 'string', 'placeholder' => '', 'title' => 'Imgix or Cloudfront URL (Leave empty to use S3 default domain)'],
+    'http_proxy_url' => ['type' => 'string', 'placeholder' => 'http://127.0.0.1', 'title' => 'HTTP Proxy URL'],
+    'http_proxy_port' => ['type' => 'number', 'placeholder' => '8080', 'title' => 'HTTP Proxy port'],
   ];
 
   public $plugin_name = "sink";
@@ -55,7 +53,7 @@ class Sink
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('admin_init', [$this, 'checkWPConfig']);
 
-        $this->ui = new UI();
+        $this->ui = new UI($this->plugin_name);
         $updater = new Updater(
           $this->plugin_slug,
           $this->plugin_name,
@@ -66,6 +64,8 @@ class Sink
         $updater->bootUpdateService();
         $this->initLogic();
     }
+
+    $this->fixUploadDir();
   }
 
   public function registerSettings()
@@ -99,14 +99,22 @@ class Sink
 
   private function getS3Client()
   {
-    return new S3Client([
-        'version' => 'latest',
-        'region'  => get_option('aws_region'),
-        'credentials' => [
-          'key'    => get_option('aws_access_id'),
-          'secret' => get_option('aws_secret'),
-        ]
-    ]);
+    $config = [
+      'version' => 'latest',
+      'region'  => get_option('aws_region'),
+      'credentials' => [
+        'key'    => get_option('aws_access_id'),
+        'secret' => get_option('aws_secret'),
+      ]
+    ];
+
+    if(null != get_option('http_proxy_url')) {
+      $config['http'] = [
+        'proxy' => get_option('http_proxy_url').':'.get_option('http_proxy_port'),
+      ];
+    }
+
+    return new S3Client($config);
   }
 
   public function registerS3StreamWrapper()
@@ -118,6 +126,32 @@ class Sink
     return $client;
   }
 
+  public function createDefaultDir($dir, $key)
+  {
+    // Instantiate an Amazon S3 client.
+    $client = $this->registerS3StreamWrapper();
+    if (null != get_option('cdn_endpoint')) {
+      return get_option('cdn_endpoint');
+    }
+
+    if (true == get_option('keep_site_domain')) {
+      return WP_SITEURL;
+    }
+
+    try {
+      if (!file_exists($dir.$key)) {
+        mkdir($dir.$key);
+      }
+
+      $result = $client->getObjectUrl(get_option('aws_bucket'), $key);
+    } catch (\Exception $e) {
+      if (is_admin()) {
+        $this->ui->renderNotice('notice-error', 'There was an error while configuring S3');
+      }
+    }
+    return $result;
+  }
+
   public function setUploadDir($uploads)
   {
     // Instantiate an Amazon S3 client.
@@ -125,21 +159,7 @@ class Sink
 
     $dir = "s3://".get_option('aws_bucket')."/";
     $key = get_option('aws_uploads_path') ? get_option('aws_uploads_path') : $this->default_uploads_folder;
-
-    try {
-
-      if(!file_exists($dir.$key)) {
-        mkdir($dir.$key);
-      }
-
-      $result = $client->getObjectUrl(get_option('aws_bucket'), $key);
-
-    } catch(\Exception $e) {
-      $this->ui->renderNotice(
-        'notice-error',
-        'There was an error while configuring S3'
-      );
-    }
+    $result = $this->createDefaultDir($dir, $key);
 
     $uploads = array_merge(
       $uploads,
@@ -153,6 +173,36 @@ class Sink
     );
 
     return $uploads;
+  }
+
+  function deleteMedia($id)
+  {
+    $this->registerS3StreamWrapper();
+
+    $meta = get_post_meta($id);
+    $metadata = maybe_unserialize($meta['_wp_attachment_metadata'][0]);
+    $basename = basename($metadata['file']);
+    $path = str_replace($basename, '', $metadata['file']);
+
+    try {
+      unlink($metadata['file']);
+    } catch(\Exception $e) {
+      $this->ui->renderNotice('notice-error', $e->getMessage);
+    }
+
+    foreach($metadata['sizes'] as $thumbnail) {
+      unlink($path.$thumbnail['file']);
+    }
+  }
+
+  public function fixUploadDir()
+  {
+    add_filter('upload_dir', [$this, 'setUploadDir']);
+  }
+
+  public function handleDelete()
+  {
+    add_action('delete_attachment', [$this, 'deleteMedia']);
   }
 
   public function processMetadata($metadata, $post)
@@ -175,35 +225,12 @@ class Sink
     return array($meta, $file, $sourceimagetype, $iptc);
   }
 
-  function deleteMedia($id)
-  {
-    $this->registerS3StreamWrapper();
-
-    $meta = get_post_meta($id);
-    $metadata = maybe_unserialize($meta['_wp_attachment_metadata'][0]);
-    $basename = basename($metadata['file']);
-    $path = str_replace($basename, '', $metadata['file']);
-
-    try {
-      unlink($metadata['file']);
-    } catch(Exception $e) {
-      $this->ui->renderNotice(
-        'notice-error',
-        $e->getMessage
-      );
-    }
-
-    foreach($metadata['sizes'] as $thumbnail) {
-      unlink($path.$thumbnail['file']);
-    }
-  }
-
   public function initLogic()
   {
-    // two ways, update `upload_dir`
+    // two ways, set `upload_dir` correctly
     // or make changes on post_save (post-type: attachment)
 
-    // if resize is true
+    // if resize is true // removed this option
     if (get_option('resize_wordpress')) {
 
       // resize images with your own logic
@@ -219,19 +246,6 @@ class Sink
       // upload original
       // add_filter('pre_move_uploaded_file', [$this, 'uploadToS3'], 10, 4);
     }
-
-    add_action('delete_attachment', [$this, 'deleteMedia']);
-
-    // set upload_dir path to update save path with s3 stream and
-    add_filter('wp_handle_upload_prefilter', function($file) {
-      add_filter('upload_dir', [$this, 'setUploadDir']);
-      return $file;
-    });
-
-    add_filter('wp_handle_upload', function($fileinfo) {
-      remove_filter('upload_dir', [$this, 'setUploadDir']);
-      return $fileinfo;
-    });
   }
 }
 
