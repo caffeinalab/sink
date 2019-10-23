@@ -36,15 +36,15 @@ class Sink
    * dynamically the options page
    */
   public $configMap = [
-    'aws_region' => ['type' => 'string', 'placeholder' => 'eu-west-1', 'title' => 'AWS Region'],
-    'aws_bucket' => ['type' => 'string', 'placeholder' => 'caffeina', 'title' => 'AWS Bucket'],
-    'aws_access_id' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Access Key ID'],
-    'aws_secret' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Secret', 'password' => true],
-    'aws_uploads_path' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS uploads path'],
-    'keep_site_domain' => ['type' => 'boolean', 'placeholder' => '', 'title' => 'Do not override website domain.'],
-    'cdn_endpoint' => ['type' => 'string', 'placeholder' => '', 'title' => 'Imgix or Cloudfront URL (Leave empty to use S3 default domain)'],
-    'http_proxy_url' => ['type' => 'string', 'placeholder' => 'http://127.0.0.1', 'title' => 'HTTP Proxy URL'],
-    'http_proxy_port' => ['type' => 'number', 'placeholder' => '8080', 'title' => 'HTTP Proxy port'],
+    'sink_cff_aws_region' => ['type' => 'string', 'placeholder' => 'eu-west-1', 'title' => 'AWS Region'],
+    'sink_cff_aws_bucket' => ['type' => 'string', 'placeholder' => 'caffeina', 'title' => 'AWS Bucket'],
+    'sink_cff_aws_access_id' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Access Key ID'],
+    'sink_cff_aws_secret' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS Secret', 'password' => true],
+    'sink_cff_aws_uploads_path' => ['type' => 'string', 'placeholder' => '', 'title' => 'AWS uploads path'],
+    'sink_cff_keep_site_domain' => ['type' => 'boolean', 'placeholder' => '', 'title' => 'Do not override website domain.'],
+    'sink_cff_cdn_endpoint' => ['type' => 'string', 'placeholder' => '', 'title' => 'Imgix or Cloudfront URL (Leave empty to use S3 default domain)'],
+    'sink_cff_http_proxy_url' => ['type' => 'string', 'placeholder' => 'http://127.0.0.1', 'title' => 'HTTP Proxy URL'],
+    'sink_cff_http_proxy_port' => ['type' => 'number', 'placeholder' => '8080', 'title' => 'HTTP Proxy port'],
   ];
 
   public $plugin_name = "sink";
@@ -85,7 +85,7 @@ class Sink
     if($this->abortStartupOnMissingConfig()) {
       return;
     }
-    
+
     $this->fixUploadDir();
   }
 
@@ -115,8 +115,8 @@ class Sink
   public function checkWPConfig()
   {
     foreach ($this->configMap as $config => $type) {
-        if (get_option($config) == false && defined(strtoupper($this->plugin_name."_".$config))) {
-            update_option($config, constant(strtoupper($this->plugin_name."_".$config)));
+        if (get_option($config) == false && defined(strtoupper($config))) {
+            update_option($config, constant(strtoupper($config)));
             
             $this->ui->renderNotice(
               'notice-info',
@@ -130,7 +130,7 @@ class Sink
   {
     $missing = false;
     foreach ($this->configMap as $config => $type) {
-      if (strpos($config, 'aws_') === 0 && get_option($config) == false) {
+      if (strpos($config, 'sink_cff_aws_') === 0 && get_option($config) == false) {
         $this->ui->renderNotice(
           'notice-error',
           'Missing required configuration `'.$config.'`'

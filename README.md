@@ -67,17 +67,17 @@ To use Sink, just install it and configure it in the settings page based on your
 You can also alternatively add these settings into `wp-config.php`
 
 ```php
-define('SINK_AWS_REGION', "eu-west-1");
-define('SINK_AWS_BUCKET', "caffeina"); // bucket name
-define('SINK_AWS_ACCESS_ID', "");
-define('SINK_AWS_SECRET', "");
-define('SINK_AWS_UPLOADS_PATH', "uploads");
+define('SINK_CFF_AWS_REGION', "eu-west-1");
+define('SINK_CFF_AWS_BUCKET', "caffeina"); // bucket name
+define('SINK_CFF_AWS_ACCESS_ID', "");
+define('SINK_CFF_AWS_SECRET', "");
+define('SINK_CFF_AWS_UPLOADS_PATH', "uploads");
 
-define('SINK_CDN_ENDPOINT', 'https://caffeina.imgix.net/uploads'); // mind that there's no slash
-define('SINK_KEEP_SITE_DOMAIN', false);
+define('SINK_CFF_KEEP_SITE_DOMAIN', 'https://caffeina.imgix.net/uploads'); // mind that there's no slash
+define('SINK_CFF_CDN_ENDPOINT', false);
 
-define('SINK_HTTP_PROXY_URL', "http://localhost"); // the protocol is included
-define('SINK_HTTP_PROXY_PORT', "8080");
+define('SINK_CFF_HTTP_PROXY_URL', "http://localhost"); // the protocol is included
+define('SINK_CFF_HTTP_PROXY_PORT', "8080");
 ```
 
 When `SINK_KEEP_SITE_DOMAIN` is set to true, the media address will keep the WordPress URL. That means that it won't work until you add some Nginx rules to proxy the requests to the CDN endpoint.
