@@ -46,6 +46,9 @@ class UI
 
   public function renderNotice($type, $message)
   {
+    if (!is_admin()) {
+      return;
+    }
     add_action(
       'admin_notices',
       function () use ($type, $message) {

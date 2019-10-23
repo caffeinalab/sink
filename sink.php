@@ -81,9 +81,11 @@ class Sink
         );
 
         $updater->bootUpdateService();
-        $this->initLogic();
     }
-
+    if($this->abortStartupOnMissingConfig()) {
+      return;
+    }
+    
     $this->fixUploadDir();
   }
 
@@ -112,21 +114,32 @@ class Sink
    */
   public function checkWPConfig()
   {
-      $loaded = false;
+    foreach ($this->configMap as $config => $type) {
+        if (get_option($config) == false && defined(strtoupper($this->plugin_name."_".$config))) {
+            update_option($config, constant(strtoupper($this->plugin_name."_".$config)));
+            
+            $this->ui->renderNotice(
+              'notice-info',
+              'Loaded the `'.$config.'` from wp-config.'
+            );
+        }
+    }
+  }
 
-      foreach ($this->configMap as $config => $type) {
-          if (get_option($config) == false && defined(strtoupper($this->plugin_name.$config))) {
-              update_option($config, constant(strtoupper($this->plugin_name.$config)));
-              $loaded = true;
-          }
+  public function abortStartupOnMissingConfig()
+  {
+    $missing = false;
+    foreach ($this->configMap as $config => $type) {
+      if (strpos($config, 'aws_') === 0 && get_option($config) == false) {
+        $this->ui->renderNotice(
+          'notice-error',
+          'Missing required configuration `'.$config.'`'
+        );
+        $missing = true;
       }
+    }
 
-      if ($loaded) {
-          $this->ui->renderNotice(
-            'notice-info',
-            'I have loaded the config from wp-config. It will not overwrite the settings if set from the options page'
-          );
-      }
+    return $missing;
   }
 
   /**
@@ -244,77 +257,6 @@ class Sink
   public function fixUploadDir()
   {
     add_filter('upload_dir', [$this, 'setUploadDir']);
-  }
-
-
-  // Unused methods
-
-  function deleteMedia($id)
-  {
-      $this->registerS3StreamWrapper();
-
-      $meta = get_post_meta($id);
-      $metadata = maybe_unserialize($meta['_wp_attachment_metadata'][0]);
-      $basename = basename($metadata['file']);
-      $path = str_replace($basename, '', $metadata['file']);
-
-      try {
-          unlink($metadata['file']);
-      } catch (\Exception $e) {
-          $this->ui->renderNotice('notice-error', $e->getMessage);
-      }
-
-      foreach ($metadata['sizes'] as $thumbnail) {
-          unlink($path.$thumbnail['file']);
-      }
-  }
-
-  public function handleDelete()
-  {
-    add_action('delete_attachment', [$this, 'deleteMedia']);
-  }
-
-  public function processMetadata($metadata, $post)
-  {
-    // Upload of single resized files can happen here.
-    // If using AWS S3 stream, no need to implement here.
-    return array($metadata, $post);
-  }
-
-  public function processResizing($payload, $orig_w, $orig_h, $dest_w, $dest_h, $crop)
-  {
-    // Implement here any photo resizing. If using a service such as imgix,
-    // this is not necessary and can be disabled
-    return array($payload, $orig_w, $orig_h, $dest_w, $dest_h, $crop);
-  }
-
-  public function readMetadata($meta, $file, $sourceimagetype, $iptc)
-  {
-    // Do something with the image file exif information
-    return array($meta, $file, $sourceimagetype, $iptc);
-  }
-
-  public function initLogic()
-  {
-    // two ways, set `upload_dir` correctly
-    // or make changes on post_save (post-type: attachment)
-
-    // if resize is true // removed this option
-    if (get_option('resize_wordpress')) {
-
-      // resize images with your own logic
-      add_filter('image_resize_dimensions', [$this, 'processResizing'], 10, 6);
-
-      // use this to upload resized files
-      add_filter('wp_generate_attachment_metadata', [$this, 'processMetadata'], 10, 2);
-      add_filter('wp_read_image_metadata', [$this, 'readMetadata'], 10,5);
-
-      // upload files after resize
-      // add_filter('pre_move_uploaded_file', [$this, 'uploadToS3'], 10, 4);
-    } else {
-      // upload original
-      // add_filter('pre_move_uploaded_file', [$this, 'uploadToS3'], 10, 4);
-    }
   }
 }
 
