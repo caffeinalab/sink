@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sink
  * Description: Sync media to S3 seamlessly
- * Version:     1.0.0
+ * Version:     1.0.1
  * Author:      Caffeina
  * Author URI:  https://caffeina.com/
  * Plugin URI:  https://github.com/caffeinalab/sink
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 define( 'SINK_URL', plugin_dir_url( __FILE__ ) );
 define( 'SINK_PATH', plugin_dir_path( __FILE__ ) );
-define( 'SINK_VERSION', '1.0.0' );
+define( 'SINK_VERSION', '1.0.1' );
 
 /**
  * Main class of the plugin. Everything starts here
