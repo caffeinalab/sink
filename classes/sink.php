@@ -66,6 +66,7 @@ class Sink
         }
 
         $options = $this->options->loadOptions();
+
         if (!$options) {
             $this->ui->renderNotice('notice-error', 'Plugin not loaded, missing configuration');
             return;
@@ -87,16 +88,16 @@ class Sink
     {
         $config = [
           'version' => 'latest',
-          'region'  => $this->config_map[0],
+          'region'  => $this->config_map[0]['value'],
           'credentials' => [
-            'key'    => $this->config_map[2],
-            'secret' => $this->config_map[3],
+            'key'    => $this->config_map[2]['value'],
+            'secret' => $this->config_map[3]['value'],
           ]
         ];
 
-        if (! empty($this->config_map[7])) {
+        if (! empty($this->config_map[7]['value'])) {
             $config['http'] = [
-              'proxy' => $this->config_map[7].':'.$this->config_map[8],
+              'proxy' => $this->config_map[7]['value'].':'.$this->config_map[8]['value'],
             ];
         }
 
@@ -133,18 +134,19 @@ class Sink
         try {
             if (!file_exists($dir.$key)) {
                 mkdir($dir.$key);
+                die;
             }
 
             // Moved because it should always create the directory first.
-            if (! empty($this->config_map[6])) {
-                return $this->config_map[6];
+            if (! empty($this->config_map[6]['value'])) {
+                return $this->config_map[6]['value'];
             }
 
-            if (true == $this->config_map[5]) {
+            if (true == $this->config_map[5]['value']) {
                 return WP_SITEURL;
             }
 
-            $result = $client->getObjectUrl($this->config_map[1], $key);
+            $result = $client->getObjectUrl($this->config_map[1]['value'], $key);
         } catch (\Exception $e) {
             if (is_admin()) {
                 $this->ui->renderNotice('notice-error', 'There was an error while configuring S3');
@@ -164,9 +166,8 @@ class Sink
     {
         // Instantiate an Amazon S3 client.
         $client = $this->registerS3StreamWrapper();
-
-        $dir = "s3://".$this->config_map[1]."/";
-        $key = $this->config_map['4'] ? $this->config_map['4'] : $this->default_uploads_folder;
+        $dir = "s3://".$this->config_map[1]['value']."/";
+        $key = $this->config_map['4']['value'] ?: $this->default_uploads_folder;
         $result = $this->createDefaultDir($dir, $key);
 
         $uploads = array_merge(

@@ -150,8 +150,8 @@ class Options
                 continue;
             }
 
-            $config['value'] = $this->getValueForOption($config);
-            if ($config['required'] && empty($config['value'])) {
+            $this->config_map[$key]['value'] = $this->getValueForOption($config);
+            if ($this->config_map[$key]['required'] && empty($this->config_map[$key]['value'])) {
                 $continue = false;
             }
         }
