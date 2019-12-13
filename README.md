@@ -103,27 +103,27 @@ server {
   # ...
   server_name ~^(www\.)?(?<domain>.+)$;
 
-  	set $uploads_uri $uri;
-		location ~ ^/.*/uploads/(.+)$ {
-			rewrite ^/.*/uploads/(.+)$ /uploads/$1;
-			set $uploads_uri $uri;
-		}
+    set $uploads_uri $uri;
+    location ~ ^/.*/uploads/(.+)$ {
+      rewrite ^/.*/uploads/(.+)$ /uploads/$1;
+      set $uploads_uri $uri;
+    }
 
-		location ~ ^/uploads/(.+)\-([0-9]+)x([0-9]+)\.([^\.]+)$ {
-			rewrite ^/uploads/(.+)\-([0-9]+)x([0-9]+)\.([^\.]+)$ /uploads/$1.$4?$args&w=$2&h=$3;
-		}
+    location ~ ^/uploads/(.+)\-([0-9]+)x([0-9]+)\.([^\.]+)$ {
+      rewrite ^/uploads/(.+)\-([0-9]+)x([0-9]+)\.([^\.]+)$ /uploads/$1.$4?$args&w=$2&h=$3;
+    }
 
-		location ~ ^/uploads/(.+)\-([0-9]+)\.([^\.]+)$ {
-			rewrite ^/uploads/(.+)\-([0-9]+)\.([^\.]+)$ /uploads/$1.$3?$args&w=$2;
-		}
+    location ~ ^/uploads/(.+)\-([0-9]+)\.([^\.]+)$ {
+      rewrite ^/uploads/(.+)\-([0-9]+)\.([^\.]+)$ /uploads/$1.$3?$args&w=$2;
+    }
 
-		location ~ ^/uploads/.*$ {
-			try_files $uploads_uri $uri @imgix;
-		}
+    location ~ ^/uploads/.*$ {
+      try_files $uploads_uri $uri @imgix;
+    }
 
-		location @imgix {
-			proxy_pass https://aircs3.imgix.net;
-		}
+    location @imgix {
+      proxy_pass https://aircs3.imgix.net;
+    }
 
   # ...
   # WordPress configuration
