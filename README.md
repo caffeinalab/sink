@@ -73,16 +73,20 @@ define('SINK_AWS_ACCESS_ID', "");
 define('SINK_AWS_SECRET', "");
 define('SINK_AWS_UPLOADS_PATH', "uploads");
 
-define('SINK_KEEP_SITE_DOMAIN', 'https://caffeina.imgix.net/uploads'); // mind that there's no slash
-define('SINK_CDN_ENDPOINT', false);
+define('SINK_KEEP_SITE_DOMAIN', false);
+define('SINK_CDN_ENDPOINT', 'https://caffeina.imgix.net/uploads'); // mind that there's no slash
 
 define('SINK_HTTP_PROXY_URL', "http://localhost"); // the protocol is included
 define('SINK_HTTP_PROXY_PORT', "8080");
 ```
 
-When `SINK_KEEP_SITE_DOMAIN` is set to true, the media address will keep the WordPress URL. That means that it won't work until you add some Nginx rules to proxy the requests to the CDN endpoint.
+- When `SINK_KEEP_SITE_DOMAIN` is set to true, the media address will keep the WordPress URL. That means that it won't work until you add some Nginx rules to proxy the requests to the CDN endpoint.
 
-`SINK_CDN_ENDPOINT` has priority over `SINK_KEEP_SITE_DOMAIN` so if set, all images will have the CDN URL.
+For example, if you configure S3 and you have a file that's in `https://bucket.s3.eu-west-1.amazonaws.com/static/privacy_policy.html`, when setting `SINK_KEEP_SITE_DOMAIN` to `true`, WordPress will return it as `WP_HOME."static/privacy_policy.html"`
+
+- `SINK_CDN_ENDPOINT` has priority over `SINK_KEEP_SITE_DOMAIN` so if set, all images will have the CDN URL.
+
+From the example above, WordPress would now return the static file with this URL `SINK_CDN_ENDPOINT."static/privacy_policy.html"`
 
 Everything is now set up. You don't need to worry about anything else.
 
