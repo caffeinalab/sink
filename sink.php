@@ -15,6 +15,6 @@ if (!defined('ABSPATH')) {
 
 define('SINK_URL', plugin_dir_url(__FILE__));
 define('SINK_PATH', plugin_dir_path(__FILE__));
-define('SINK_VERSION', '1.0.2');
+define('SINK_VERSION', '1.0.3');
 
 add_action('plugins_loaded', array('Sink\Sink', 'init'));
