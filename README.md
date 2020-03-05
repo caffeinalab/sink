@@ -16,12 +16,15 @@
 
 Sync media with an AWS S3 bucket
 
+[Jump](#new-feature) to the newest feature.
+
 ## Table of Contents
 
 - [Sink](#sink)
   - [Table of Contents](#table-of-contents)
   - [About The Project](#about-the-project)
     - [How it works](#how-it-works)
+  - [New feature](#new-feature)
     - [Dependencies](#dependencies)
   - [Getting Started](#getting-started)
     - [Updates](#updates)
@@ -44,6 +47,24 @@ This plugin makes it seamless to use S3 as a storage service throught the S3's s
 ### How it works
 
 The plugin uses the configuration to connect to the *S3 Bucket* and move media files there once uploaded. It listens to the `media_upload` hooks.
+
+## New feature
+
+As of version 1.0.3. I've redesigned the settings page and added an option to manage existing media files.
+
+This is useful in case you're adding the plugin to an existing website or project, or enable it later on when you've configured the AWS Bucket.
+
+Here's a video demonstration of the feature.
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/xwavLMihFEY/0.jpg)](https://www.youtube.com/watch?v=xwavLMihFEY)
+
+What it does:
+
+1. If there are files in your local uploads directory. The plugin will not connect WordPress to AWS S3. You're given two choices.
+2. Ignore the existing files. They'll show up as missing on the media manager.
+3. Upload them to S3. From the settings menu, you can choose to transfer the files over to S3.
+   1. If you move from the page, the transfer will stop, but it will begin again once you've reopened the page and transfer the remaining files.
+   2. Once the transfer has finished and there aren't any more files, the plugin will connect to S3 automatically and start working seamlessly.
 
 <!-- DEPENDENCIES -->
 ### Dependencies
