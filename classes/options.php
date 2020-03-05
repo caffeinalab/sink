@@ -4,11 +4,10 @@ namespace Sink;
 
 class Options
 {
-
-  /**
-   * Defines plugin options and some properties for each in order to create
-   * dynamically the options page
-   */
+    /**
+     * Defines plugin options and some properties for each in order to create
+     * dynamically the options page.
+     */
     public $config_map = [
     [
         'id' => 'aws_region',
@@ -82,11 +81,26 @@ class Options
         'placeholder' => '8080',
         'title' => 'HTTP Proxy port',
         'value' => null,
-    ]
+    ],
   ];
 
     public $plugin_name;
     protected static $instance;
+
+    public static function init($plugin_name)
+    {
+        return self::getInstance($plugin_name);
+    }
+
+    public static function getInstance($plugin_name)
+    {
+        $class = __CLASS__;
+        if (self::$instance == null) {
+            self::$instance = new $class($plugin_name);
+        }
+
+        return self::$instance;
+    }
 
     public function __construct($plugin_name)
     {
@@ -102,7 +116,7 @@ class Options
             return null;
         }
 
-        return $this->plugin_name."_".$option['id'];
+        return $this->plugin_name.'_'.$option['id'];
     }
 
     public function getWPConfigOptionName($option)
@@ -139,14 +153,15 @@ class Options
         if (defined($wp_name)) {
             $wp_value = constant($wp_name);
         }
-        return !!$wp_value;
+
+        return (bool) $wp_value;
     }
 
     public function loadOptions()
     {
         $continue = true;
         foreach ($this->config_map as $key => $config) {
-            if (! empty($config['value'])) {
+            if (!empty($config['value'])) {
                 continue;
             }
 
@@ -156,13 +171,13 @@ class Options
             }
         }
 
-        return $continue ?  $this->config_map : false;
+        return $continue ? $this->config_map : false;
     }
 
     /**
-     * Loops through config options to save them on the database
+     * Loops through config options to save them on the database.
+     *
      * @uses `register_setting` wp global function
-     * @return void
      */
     public function registerSettings()
     {
@@ -171,7 +186,7 @@ class Options
                 $this->plugin_name.'_options',
                 $this->getOptionName($config),
                 [
-                    'type' => $config['type']
+                    'type' => $config['type'],
                 ]
             );
         }

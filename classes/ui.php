@@ -2,8 +2,7 @@
 
 namespace Sink;
 
-require_once __DIR__."/options.php";
-use \Sink\Options;
+require_once __DIR__.'/options.php';
 
 class UI
 {
@@ -14,12 +13,23 @@ class UI
     protected $options;
     protected static $instance;
 
-    public function __construct($plugin_name, $plugin_slug)
+    public static function init($plugin_name, $plugin_slug)
     {
-        if (null != self::$instance) {
-            return self::$instance;
+        return self::getInstance($plugin_name, $plugin_slug);
+    }
+
+    public static function getInstance($plugin_name, $plugin_slug)
+    {
+        $class = __CLASS__;
+        if (self::$instance == null) {
+            self::$instance = new $class($plugin_name, $plugin_slug);
         }
 
+        return self::$instance;
+    }
+
+    public function __construct($plugin_name, $plugin_slug)
+    {
         if (is_admin()) {
             add_action('admin_menu', [$this, 'addOptionsMenu']);
             add_filter('plugin_action_links_'.$plugin_slug, [$this, 'renderSettingsButton']);
@@ -27,19 +37,26 @@ class UI
 
         $this->plugin_name = $plugin_name;
         $this->plugin_slug = $plugin_slug;
-        $this->options = new Options($plugin_name);
+        $this->options = Options::init($plugin_name);
 
-        self::$instance = $this;
+        return $this;
     }
 
     public function pluginNameToClassName()
     {
         $class_name = strtoupper(substr($this->plugin_name, 0, 1)).substr($this->plugin_name, 1);
+
         return $class_name;
     }
 
     public function renderOptionsPage()
     {
+        $key = 'ignore_existing_media';
+
+        if (in_array($key, array_keys($_REQUEST)) && !is_null($_REQUEST[$key])) {
+            \update_option($this->plugin_name.'_'.$key, $_REQUEST[$key]);
+        }
+
         require $this->options_template;
     }
 
@@ -77,9 +94,10 @@ class UI
             $links,
             0,
             0,
-            '<a href="' .admin_url('options-general.php?page='.$this->plugin_name) .
-              '">' . __('Settings') . '</a>'
+            '<a href="'.admin_url('options-general.php?page='.$this->plugin_name).
+              '">'.__('Settings').'</a>'
         );
+
         return $links;
     }
 }
