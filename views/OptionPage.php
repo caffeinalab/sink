@@ -1,18 +1,18 @@
 <div class="wrap">
 <h1>Sink</h1>
 
-<?php
-  settings_fields('sink_options');
-  do_settings_sections('sink_options');
-  $config_map = $this->options->config_map;
-  $opts = $this->options->loadOptions() ?: $config_map;
-
-  $aws_region = $this->options->getValueForOption($config_map[0]);
-?>
-
 <div class="uk-grid-small uk-child-width-expand@s" uk-grid>
 
 <form class="uk-form-stacked" method="post" action="options.php">
+
+    <?php
+        settings_fields('sink_options');
+        do_settings_sections('sink_options');
+        $config_map = $this->options->config_map;
+        $opts = $this->options->loadOptions() ?: $config_map;
+
+        $aws_region = $this->options->getValueForOption($config_map[0]);
+    ?>
 
     <div class="uk-margin-small-top">
         <ul class="uk-flex uk-tab" uk-tab>
