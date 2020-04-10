@@ -5,7 +5,7 @@
  * Version:     1.0.2
  * Author:      Caffeina
  * Author URI:  https://caffeina.com/
- * Plugin URI:  https://github.com/caffeinalab/sink.
+ * Plugin URI:  https://github.com/caffeinalab/sink
  */
 require_once 'classes/sink.php';
 

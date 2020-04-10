@@ -23,6 +23,7 @@ class Updater
     public function bootUpdateService()
     {
         // define the alternative API for updating checking
+        // use site_transient_update_plugins to test
         add_filter("pre_set_site_transient_update_plugins", array($this, "checkVersion"));
         // Define the alternative response for information checking
         add_filter("plugins_api", array($this, "setPluginInfo"), 10, 3);
@@ -75,7 +76,7 @@ class Updater
 
     public function checkVersion( $transient )
     {
-        if (!empty($transient)&& empty($transient->checked)) {
+        if (!empty($transient) && empty($transient->checked)) {
             return $transient;
         }
         // Get plugin & GitHub release information
@@ -85,6 +86,9 @@ class Updater
         if (!isset($this->githubAPIResult->tag_name)) {
             return $transient;
         }
+
+        $this->githubAPIResult->tag_name = str_replace('v', '', $this->githubAPIResult->tag_name);
+
         $doUpdate = version_compare($this->githubAPIResult->tag_name, $transient->checked[$this->config['slug']]);
 
         if ($doUpdate == 1) {
@@ -103,8 +107,10 @@ class Updater
             $obj->icons = ['1x' => '/wp-content/plugins/postino/res/128.png', '2x' => '/wp-content/plugins/postino/res/128.png'];
             $transient->response[$this->config["slug"]] = $obj;
         }
+
         return $transient;
     }
+
     public function setPluginInfo( $false, $action, $response ) {
         // Get plugin & GitHub release information
         $this->getPluginData();
@@ -127,6 +133,7 @@ class Updater
         // This is our release download zip file
         $downloadLink = $this->githubAPIResult->zipball_url;
         $response->download_link = $downloadLink;
+
         return $response;
     }
     public function postInstall( $true, $hook_extra, $result )
