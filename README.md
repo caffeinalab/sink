@@ -123,30 +123,39 @@ The WordPress generated thumbnails (resized images) will be moved to S3 automati
 
 > This approach isn't recommended because it creates unnecessary copies of the same file and it adds load to the server. Use a service to resize photos on the fly instead and turn off image resizing on WordPress. And then simply proxy the images from Nginx like below.
 
+If you use the configuration below. The web server will check for the files through the URL and in the end will forward to imgix.com automatically constructing the url of the imgix bucket as the following:
+
+-> $domain.imgix.net
+-> if your website domain is `caffeina.com` then your imgix bucket would be `caffeina.com.imgix.net`
+
+Remember that the configuration accepts any domain name but the imgix bucket will only work with one so this is not ideal.
+
 ```lua
 server {
   # ...
   server_name ~^(www\.)?(?<domain>.+)$;
 
-  location ~ ^/.*/uploads/(.+)\-([0-9]+)x([0-9]+)\.([^\.]+)$ {
-    rewrite ^/.*/uploads/(.+)\-([0-9]+)x([0-9]+)\.([^\.]+)$ /uploads/$1.$4?$args&w=$2&h=$3;
-  }
+    set $uploads_uri $uri;
+    location ~ ^/.*/uploads/(.+)$ {
+      rewrite ^/.*/uploads/(.+)$ /uploads/$1;
+      set $uploads_uri $uri;
+    }
 
-  location ~ ^/.*/uploads/(.+)\-([0-9]+)\.([^\.]+)$ {
-    rewrite ^/.*/uploads/(.+)\-([0-9]+)\.([^\.]+)$ /uploads/$1.$3?$args&w=$2;
-  }
+    location ~ ^/uploads/(.+)\-([0-9]+)x([0-9]+)\.([^\.]+)$ {
+      rewrite ^/uploads/(.+)\-([0-9]+)x([0-9]+)\.([^\.]+)$ /uploads/$1.$4?$args&w=$2&h=$3;
+    }
 
-  location ~ ^/.*/uploads/(.+)$ {
-    rewrite ^/.*/uploads/(.+)$ /uploads/$1;
-  }
+    location ~ ^/uploads/(.+)\-([0-9]+)\.([^\.]+)$ {
+      rewrite ^/uploads/(.+)\-([0-9]+)\.([^\.]+)$ /uploads/$1.$3?$args&w=$2;
+    }
 
-  location ~ ^/uploads/.*$ {
-    try_files $uri @imgix;
-  }
+    location ~ ^/uploads/.*$ {
+      try_files $uploads_uri $uri @imgix;
+    }
 
-  location @imgix {
-    proxy_pass https://$domain.imgix.net;
-  }
+    location @imgix {
+      proxy_pass https://$domain.imgix.net;
+    }
 
   # ...
   # WordPress configuration
