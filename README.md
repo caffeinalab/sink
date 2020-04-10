@@ -98,6 +98,13 @@ The WordPress generated thumbnails (resized images) will be moved to S3 automati
 
 > This approach isn't recommended because it creates unnecessary copies of the same file and it adds load to the server. Use a service to resize photos on the fly instead and turn off image resizing on WordPress. And then simply proxy the images from Nginx like below.
 
+If you use the configuration below. The web server will check for the files through the URL and in the end will forward to imgix.com automatically constructing the url of the imgix bucket as the following:
+
+-> $domain.imgix.net
+-> if your website domain is `caffeina.com` then your imgix bucket would be `caffeina.com.imgix.net`
+
+Remember that the configuration accepts any domain name but the imgix bucket will only work with one so this is not ideal.
+
 ```lua
 server {
   # ...
@@ -122,7 +129,7 @@ server {
     }
 
     location @imgix {
-      proxy_pass https://aircs3.imgix.net;
+      proxy_pass https://$domain.imgix.net;
     }
 
   # ...
