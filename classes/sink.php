@@ -220,7 +220,7 @@ class Sink
 
     public function isActive()
     {
-        if (!\is_plugin_active($this->plugin_slug)) {
+        if (function_exists('is_plugin_active') && !\is_plugin_active($this->plugin_slug)) {
             return false;
         }
 
